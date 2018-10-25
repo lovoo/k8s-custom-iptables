@@ -1,4 +1,5 @@
 #!/bin/sh
+# shellcheck shell=dash
 
 # Copyright 2017 The Kubernetes Authors.
 #
@@ -18,15 +19,15 @@ set -e
 IPTABLES=${IPTABLES:-/sbin/iptables}
 SLEEP_INTERVAL=${SLEEP_INTERVAL:-10}
 CONFIG_DIR=${CONFIG_DIR:-/cfg}
-if [[ -z ${UUID:-} ]]; then
+
+if [ -z "${UUID:-}" ]; then
   UUID=$(date "+%s")
 fi
 
-COMMENT_PREFIX="custom-iptables-${UUID}"
+COMMENT_PREFIX="custom-iptables-$UUID"
 
 log() {
-  local ts=$(date '+%m-%d %H:%M:%S')
-  echo "${ts}]" "$@"
+  echo "$(date '+%m-%d %H:%M:%S')]" "$@"
 }
 
 update_nat() {
@@ -35,58 +36,64 @@ update_nat() {
   local comment=$3
 
   # Check if the rule already exists if adding.
-  if [[ ${mode} = 'A' ]]; then
-    if ${IPTABLES} -t nat -C POSTROUTING -d ${subnet} \
-        -m comment --comment "${comment}" -j MASQUERADE \
-        2>/dev/null; then
-      log "NAT rule ${comment} is installed"
+  if [ "$mode" = 'A' ]; then
+    if $IPTABLES \
+      -t nat \
+      -C POSTROUTING \
+      -d "$subnet" \
+      -m comment \
+      --comment "$comment" \
+      -j MASQUERADE \
+      2> /dev/null
+    then
+      log "NAT rule $comment is installed"
       return
     fi
   fi
 
-  ${IPTABLES} \
+  $IPTABLES \
     -t nat \
-    -${mode} POSTROUTING \
-    -d ${subnet} \
-    -m comment --comment "${comment}" \
+    "-$mode" POSTROUTING \
+    -d "$subnet" \
+    -m comment --comment "$comment" \
     -j MASQUERADE
 
-  case ${mode} in
-    'A') log "NAT rule ${comment} added";;
-    'D') log "NAT rule ${comment} deleted";;
+  case $mode in
+    'A') log "NAT rule $comment added";;
+    'D') log "NAT rule $comment deleted";;
   esac
 }
 
 main() {
-  log "Starting custom-iptables (${CONFIG_DIR})"
+  log "Starting custom-iptables ($CONFIG_DIR)"
 
-  local nat_rules=
+  local nat_rules=""
 
   while true; do
-    local old_nat_rules=${nat_rules}
-    nat_rules=
+    local old_nat_rules="$nat_rules"
+    nat_rules=""
 
-    if [[ -r ${CONFIG_DIR}/nat.rules ]]; then
-      nat_rules=$(cat ${CONFIG_DIR}/nat.rules | sed 's/[ \n\t]\+$/x/g')
+    if [ -r "$CONFIG_DIR/nat.rules" ]; then
+      nat_rules=$(sed 's/[ \n\t]\+$/x/g' "$CONFIG_DIR/nat.rules")
     fi
 
     # Remove the old NAT rules if config file has changed.
-    if [[ "${old_nat_rules}" != "${nat_rules}" ]]; then
+    if [ "$old_nat_rules" != "$nat_rules" ]; then
       log "Configuration change detected"
-      for subnet in ${old_nat_rules}; do
-        update_nat D ${subnet} "${COMMENT_PREFIX}: ${subnet}"
+      for subnet in $old_nat_rules; do
+        update_nat D $subnet "$COMMENT_PREFIX: $subnet"
       done
     fi
 
-    if [[ -z ${nat_rules} ]]; then
+    if [ -z "$nat_rules" ]; then
       log "No NAT rules configured"
     else
-      for subnet in ${old_nat_rules}; do
-        update_nat A ${subnet} "${COMMENT_PREFIX}: ${subnet}"
+      for subnet in $old_nat_rules; do
+        update_nat A $subnet "$COMMENT_PREFIX: $subnet"
       done
     fi
 
-    sleep "${SLEEP_INTERVAL}"
+    sleep "$SLEEP_INTERVAL"
   done
 }
 

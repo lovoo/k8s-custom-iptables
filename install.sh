@@ -16,10 +16,10 @@
 
 set -e
 
-if [[ -z ${TARGETS:-} ]]; then
+if [[ -z $TARGETS ]]; then
   echo "Must set TARGETS env variable to the range(s) to be masqueraded."
   exit 1
 fi
 
 kubectl apply -f daemon.yaml
-sed "s+__NAT_RULES__+${TARGETS}+g" config.yaml.in | kubectl apply -f -
+sed "s+__NAT_RULES__+$TARGETS+g" config.yaml.in | kubectl apply -f -
