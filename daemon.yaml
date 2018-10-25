@@ -30,7 +30,7 @@ spec:
         - name: k8s-custom-iptables
           securityContext:
             privileged: true
-          image: gcr.io/google_containers/k8s-custom-iptables:1.0
+          image: gcr.io/lovoo-ci/k8s-custom-iptables:ede22628ca0da800432124b94a2518835a8766f3
           imagePullPolicy: Always
           command: ["sh", "-c", "/run.sh"]
           resources:
