@@ -46,7 +46,6 @@ update_nat() {
       -j MASQUERADE \
       2> /dev/null
     then
-      log "NAT rule $comment is installed"
       return
     fi
   fi
