@@ -44,3 +44,7 @@ spec:
         - name: cfg
           configMap:
             name: k8s-custom-iptables
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 10
