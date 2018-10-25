@@ -32,23 +32,15 @@ spec:
             privileged: true
           image: gcr.io/google_containers/k8s-custom-iptables:1.0
           imagePullPolicy: Always
-          command: [ "sh", "-c", "/run.sh" ]
+          command: ["sh", "-c", "/run.sh"]
           resources:
             requests:
               cpu: 5m
               memory: 10Mi
           volumeMounts:
-          - mountPath: /cfg
-            name: cfg
+            - mountPath: /cfg
+              name: cfg
       volumes:
-      - name: cfg
-        configMap:
-          name: k8s-custom-iptables
-
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: k8s-custom-iptables
-data:
-  nat.rules: ""
+        - name: cfg
+          configMap:
+            name: k8s-custom-iptables
